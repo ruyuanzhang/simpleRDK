@@ -15,6 +15,7 @@ from time import localtime, strftime
 
 # ======= parameter you want to change ========
 subjID = 'RYZ' # initials of the subject, to save data
+expName = 'RDKDDM'
 wantSave = True # save data or not
 # =============================================
 
@@ -61,9 +62,7 @@ trials=data.TrialHandler(stimList, nTrialsPerCond)
 # define fixation
 fixation = circle.Circle(win=myWin, units='deg', radius=0.25, lineColor=0, fillColor=0)
 # define dots 
-dots = visual.DotStim(win=myWin, nDots=nDots, units='deg', fieldSize=[fieldRadius * 2, fieldRadius * 2],
-                         fieldShape='circle', speed=speedFrame, dotSize=dotSizePix, dotLife=-1) 
-                         # note here dotSize is in pixels, speed is in deg/frame
+dots = visual.DotStim(win=myWin, nDots=nDots, units='deg', fieldSize=[fieldRadius * 2, fieldRadius * 2],fieldShape='circle', speed=speedFrame, dotSize=dotSizePix, dotLife=-1) # note here dotSize is in pixels, speed is in deg/frame
 
 
 # define welcome instruction interface
@@ -102,12 +101,14 @@ for trial in trials: # use trialHandler
     ISI.complete()
     
     # show moving stim
-    kb.clock.reset()  # reset the keyboard clock
     kb.start()  # keyboard start recoding
     for i in range(maxFrames):  #
         fixation.draw()
         dots.draw()
-        myWin.flip()
+        if i == 0: # first frame
+            myWin.callOnFlip(kb.clock.reset) # reset the timer to record RT
+        else:
+            myWin.flip()
         keys = kb.getKeys(keyList=['left', 'right'])
         if keys:
             break
@@ -125,7 +126,7 @@ for trial in trials: # use trialHandler
 if wantSave: # save data
     # we want to save direction, stimType, RT, choice into a CSV file
     fileName = strftime('%Y%m%d%H%M%S', localtime())
-    fileName = f'{fileName}_{subjID}'
+    fileName = f'{fileName}_{expName}_{subjID}'
     # Save more information into a numpy file 
     dataInfo = '''
         direction: -1,left; 1, right \n
@@ -138,8 +139,10 @@ if wantSave: # save data
     trials.extraInfo={
         'subjID': subjID,
         'dataInfo': dataInfo,
+        'expName': expName,
         'time': strftime('%Y-%m-%d-%H-%M-%S', localtime()),
     }
+    #trials.printAsText()
     trials.saveAsExcel(fileName=fileName, sheetName='rawData') # save as excel
     trials.saveAsPickle(fileName=fileName) # # save as pickle
     
